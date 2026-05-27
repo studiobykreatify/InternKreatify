@@ -1,0 +1,2656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kreatify – Studio Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #4E4997;
+      --primary-dark: #3d3878;
+      --accent: #EB6424;
+      --accent-hover: #F49E60;
+      --accent-soft: #FFBC7D;
+      --purple-light: #A793C6;
+      --bg: #F0F5FA;
+      --card: #FFFFFF;
+      --text: #1e293b;
+      --muted: #334155;
+      --border: #D1D5DB;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+      --shadow: 0 4px 20px rgba(78, 73, 151, 0.1);
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 88px;
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      flex-shrink: 0;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-btn {
+      width: 76px;
+      min-height: 44px;
+      height: auto;
+      padding: 6px 4px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-size: 9px;
+      line-height: 1.15;
+      text-align: center;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: var(--radius-btn);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-btn.active { background: var(--accent); color: #fff; }
+    .sidebar-btn .icon { font-size: 18px; line-height: 1; }
+    .sidebar-spacer { flex: 1; }
+    .main {
+      margin-left: 88px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 20px 32px 16px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-img {
+      height: 44px;
+      width: auto;
+      display: block;
+    }
+    .header-text { flex: 1; }
+    .logo-tagline {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-style: italic;
+      font-weight: 500;
+      font-size: 15px;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+    .logo-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+    .banner {
+      display: none;
+      background: var(--accent);
+      color: #fff;
+      padding: 12px 32px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .banner:hover { opacity: 0.92; }
+    .banner.visible { display: block; }
+    .content { padding: 8px 32px 48px; flex: 1; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .kunden-list { display: flex; flex-direction: column; gap: 16px; }
+    .kunden-card {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto auto;
+      gap: 8px 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 1px solid transparent;
+    }
+    .kunden-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(78, 73, 151, 0.14); }
+    .kunden-card.paid-all { opacity: 0.55; pointer-events: auto; }
+    .kunden-card .name-block { grid-column: 1; }
+    .kunden-card .badge-block { grid-column: 2; grid-row: 1 / 3; align-self: start; }
+    .kunden-card .meta { grid-column: 1; font-size: 14px; color: var(--muted); }
+    .kunden-card .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .kunden-name { font-size: 20px; font-weight: 700; }
+    .kunden-firma { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .kunden-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .billing-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .billing-badge.monthly { background: #EDE9FE; color: #4E4997; }
+    .billing-badge.one-time { background: #EEF2F7; color: #475569; }
+    .badge {
+      padding: 6px 12px;
+      border-radius: var(--radius-btn);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge.red { background: #FDE8DC; color: #B84A12; }
+    .badge.orange { background: #FFF0E6; color: #C45A18; }
+    .badge.yellow { background: #FFF8ED; color: #9A5B10; }
+    .badge.gray { background: #EEF2F7; color: #475569; }
+    .badge.green { background: #E8F5EE; color: #047857; }
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--primary); color: #fff; }
+    .btn-secondary:hover { background: var(--primary-dark); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--primary); }
+    .btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hint { font-size: 12px; color: var(--muted); font-style: italic; }
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .monat-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .monat-nav button {
+      width: 40px;
+      height: 40px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--primary);
+    }
+    .monat-nav button:hover { border-color: var(--primary); }
+    .monat-title { font-size: 22px; font-weight: 700; min-width: 180px; text-align: center; }
+    .monat-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-tile {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .stat-tile .label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .stat-tile .value { font-size: 24px; font-weight: 700; }
+    .stat-tile.green .value { color: #059669; }
+    .stat-tile.yellow .value { color: #D97706; }
+    .stat-tile.blue .value { color: var(--primary); }
+    .stat-tile.planned .value { color: var(--accent); }
+    .stat-tile.planned { border: 2px solid var(--accent-soft); }
+    .monat-title { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; }
+    .modal h2, .panel-header h2 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-weight: 500;
+    }
+    .monat-list { display: flex; flex-direction: column; gap: 12px; }
+    .monat-row {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    .monat-row .k-name { font-weight: 600; flex: 1; min-width: 120px; }
+    .monat-row .r-nr { color: var(--muted); font-size: 14px; }
+    .monat-row .betrag { font-weight: 600; min-width: 80px; }
+    .status-select {
+      padding: 4px 8px;
+      border-radius: var(--radius-btn);
+      border: 1.5px solid var(--border);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 41, 59, 0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      padding: 28px;
+      width: 90%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 40px rgba(78, 73, 151, 0.2);
+    }
+    .modal h2 { font-size: 20px; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .panel-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(78, 73, 151, 0.25);
+      z-index: 150;
+    }
+    .panel-overlay.open { display: block; }
+    .slide-panel {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: 480px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--card);
+      z-index: 160;
+      box-shadow: -4px 0 32px rgba(78, 73, 151, 0.18);
+      transition: right 0.25s ease;
+      overflow-y: auto;
+      padding: 28px;
+    }
+    .slide-panel.open { right: 0; }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .panel-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .panel-close:hover { color: var(--primary); }
+    .rechnung-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .rechnung-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .rechnung-nr { font-weight: 700; }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-badge.offen { background: #FFF0E6; color: #B84A12; }
+    .status-badge.gesendet { background: #EDE9FE; color: #4E4997; }
+    .status-badge.bezahlt { background: #E8F5EE; color: #047857; }
+    .rechnung-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pdf-modal .modal { max-width: 90vw; max-height: 90vh; width: 800px; }
+    .pdf-modal iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      border-radius: var(--radius-btn);
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: var(--radius-btn);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 300;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .contract-list { display: flex; flex-direction: column; gap: 16px; }
+    .contract-card {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px 16px;
+      align-items: start;
+    }
+    .contract-dates { font-size: 15px; color: var(--text); margin-top: 6px; }
+    .contract-dates strong { color: var(--primary); }
+    .contract-bar-wrap {
+      grid-column: 1 / -1;
+      height: 6px;
+      background: #EEF2F7;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .contract-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+    .payment-check-text { font-size: 15px; line-height: 1.5; color: var(--muted); margin-bottom: 8px; }
+    .payment-check-meta { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 20px; }
+    .data-table-wrap { overflow-x: auto; background: var(--card); border-radius: var(--radius-card); box-shadow: var(--shadow); }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .data-table th, .data-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .data-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; background: #F8FAFC; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: #FAFBFD; }
+    .days-cell { font-weight: 700; font-size: 16px; }
+    .days-cell.urgent { color: #B84A12; }
+    .days-cell.soon { color: #C45A18; }
+    .days-cell.ok { color: #047857; }
+    .shooting-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .shooting-item-header { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .shooting-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
+    .shooting-status.planned { background: #FFF0E6; color: #B84A12; }
+    .shooting-status.confirmed { background: #EDE9FE; color: #4E4997; }
+    .shooting-status.completed { background: #E8F5EE; color: #047857; }
+    .team-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .team-tag { font-size: 11px; background: #EEF2F7; padding: 3px 8px; border-radius: 6px; color: var(--muted); }
+    .team-checkboxes { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+    .team-checkboxes label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; font-size: 13px; }
+    .cal-legend span { display: flex; align-items: center; gap: 6px; }
+    .cal-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .cal-legend .leg-payment i { background: var(--accent); }
+    .cal-legend .leg-ending i { background: var(--primary); }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    .cal-head {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 4px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .cal-day {
+      background: var(--card);
+      min-height: 100px;
+      padding: 6px;
+      vertical-align: top;
+    }
+    .cal-day.other-month { background: #F8FAFC; opacity: 0.7; }
+    .cal-day.today { box-shadow: inset 0 0 0 2px var(--accent); }
+    .cal-day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .cal-event {
+      font-size: 10px;
+      line-height: 1.3;
+      padding: 3px 5px;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cal-event.payment { background: #FFF0E6; color: #B84A12; }
+    .cal-event.content-end { background: #EDE9FE; color: #4E4997; }
+    .section-title { font-size: 16px; font-weight: 600; margin: 20px 0 12px; color: var(--primary); }
+    .settings-modal .modal { max-width: 520px; }
+    .slack-box {
+      background: #F8FAFC;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .slack-box h3 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+    .slack-steps { font-size: 12px; line-height: 1.55; color: var(--muted); margin: 10px 0; padding-left: 18px; }
+    .slack-steps li { margin-bottom: 6px; }
+    .slack-enable { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .slack-enable input { width: auto; }
+    .client-filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .client-filter-bar button {
+      padding: 8px 16px;
+      border-radius: var(--radius-btn);
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .client-filter-bar button:hover { border-color: var(--primary); color: var(--primary); }
+    .client-filter-bar button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .kunden-card.inactive-client { opacity: 0.65; }
+    .client-status-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+    .client-status-badge.active { background: #E8F5EE; color: #047857; }
+    .client-status-badge.inactive { background: #EEF2F7; color: #64748B; }
+    .monat-row.contract-auto { background: #FAFBFF; border-left: 3px solid var(--primary); }
+    .data-table { font-size: 13px; }
+    .data-table th, .data-table td { padding: 12px 10px; }
+
+    /* Simple password gate */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body:not(.authenticated) .app {
+      display: none;
+    }
+    /* Login-Layer ausblenden, sonst bleibt die Karte über dem Dashboard (darunter liegt nur .app). */
+    body.authenticated #login-screen {
+      display: none;
+    }
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, #1e293b, #020617);
+      color: #e5e7eb;
+      font-family: 'Poppins', sans-serif;
+    }
+    .login-card {
+      background: rgba(15, 23, 42, 0.92);
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+      width: 100%;
+      max-width: 380px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      backdrop-filter: blur(14px);
+    }
+    .login-title {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 18px;
+    }
+    .login-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+    .login-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+      color: #f9fafb;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    .login-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5);
+    }
+    .login-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .login-btn {
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #111827;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 14px 30px rgba(248, 113, 113, 0.35);
+    }
+    .login-btn:hover {
+      filter: brightness(1.03);
+    }
+    .login-meta {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: right;
+    }
+    .login-error {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #fecaca;
+      min-height: 16px;
+    }
+    .login-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    @media (max-width: 640px) {
+      .content { padding: 8px 16px 32px; }
+      .header { padding: 20px 16px 12px; }
+      .monat-stats { grid-template-columns: 1fr 1fr; }
+      @media (max-width: 480px) { .monat-stats { grid-template-columns: 1fr; } }
+      .slide-panel { width: 100%; }
+      .cal-day { min-height: 72px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:32px;height:32px;border-radius:12px;background:rgba(248,113,113,0.1);display:flex;align-items:center;justify-content:center;font-size:17px;">🔒</div>
+        <div>
+          <h1 class="login-title">Kreatify — Studio Ops</h1>
+          <p class="login-sub">Internes Dashboard · Bitte Passwort eingeben.</p>
+        </div>
+      </div>
+      <form id="login-form">
+        <label for="login-password" class="login-label">Access Password</label>
+        <input
+          id="login-password"
+          class="login-input"
+          type="password"
+          autocomplete="current-password"
+          maxlength="128"
+          placeholder="Passwort"
+          required
+        >
+        <div class="login-actions">
+          <span class="login-meta">Nur für Team Kreatify</span>
+          <button type="submit" class="login-btn">
+            Enter
+            <span>→</span>
+          </button>
+        </div>
+        <div id="login-error" class="login-error"></div>
+        <div class="login-hint">Hinweis: Der Schutz ist clientseitig (JavaScript) und für sensible Daten nicht ausreichend.</div>
+      </form>
+    </div>
+  </div>
+
+  <div class="app">
+    <nav class="sidebar">
+      <button class="sidebar-btn active" data-view="kunden" title="Clients">
+        <span class="icon">👥</span>
+        <span>Clients</span>
+      </button>
+      <button class="sidebar-btn" data-view="monat" title="Payment overview by month">
+        <span class="icon">💰</span>
+        <span>Payment</span>
+      </button>
+      <button class="sidebar-btn" data-view="contracts" title="Contracts">
+        <span class="icon">📋</span>
+        <span>Contract</span>
+      </button>
+      <button class="sidebar-btn" data-view="calendar" title="Calendar">
+        <span class="icon">🗓</span>
+        <span>Calendar</span>
+      </button>
+      <button class="sidebar-btn" id="btn-neuer-kunde" title="New client">
+        <span class="icon">+</span>
+      </button>
+      <div class="sidebar-spacer"></div>
+      <button class="sidebar-btn" id="btn-einstellungen" title="Settings">
+        <span class="icon">⚙</span>
+      </button>
+    </nav>
+
+    <div class="main">
+      <div class="banner" id="warn-banner"></div>
+      <header class="header">
+        <img
+          class="logo-img"
+          src="https://kreatify.mx/wp-content/uploads/2025/05/Kreatify-Logo-2025.png"
+          alt="Kreatify"
+          width="1080"
+          height="1080"
+        >
+        <div class="header-text">
+          <p class="logo-tagline">La chispa creativa de tu marca</p>
+          <p class="logo-sub">kreatify.mx — Studio operations</p>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="view active" id="view-kunden">
+          <div class="client-filter-bar" id="client-filter-bar">
+            <button type="button" class="active" data-filter="active">Active</button>
+            <button type="button" data-filter="inactive">Inactive</button>
+            <button type="button" data-filter="all">All</button>
+          </div>
+          <div class="kunden-list" id="kunden-list"></div>
+        </div>
+        <div class="view" id="view-monat">
+          <div class="monat-nav">
+            <button type="button" id="monat-prev">←</button>
+            <span class="monat-title" id="monat-title"></span>
+            <button type="button" id="monat-next">→</button>
+          </div>
+          <div class="monat-stats" id="monat-stats"></div>
+          <div class="monat-list" id="monat-list"></div>
+        </div>
+        <div class="view" id="view-contracts">
+          <div class="contract-list" id="contract-list"></div>
+        </div>
+        <div class="view" id="view-calendar">
+          <div class="monat-nav">
+            <button type="button" id="cal-prev">←</button>
+            <span class="monat-title" id="cal-title"></span>
+            <button type="button" id="cal-next">→</button>
+          </div>
+          <div class="cal-legend">
+            <span class="leg-payment"><i></i> Payment day</span>
+            <span class="leg-ending"><i></i> Content ending</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-overlay" id="panel-overlay"></div>
+  <aside class="slide-panel" id="slide-panel"></aside>
+
+  <div class="overlay" id="modal-kunde">
+    <div class="modal">
+      <h2 id="modal-kunde-title">New client</h2>
+      <form id="form-kunde">
+        <input type="hidden" id="kunde-id">
+        <div class="form-group">
+          <label for="k-firma">Company</label>
+          <input type="text" id="k-firma" required placeholder="Client or company name">
+        </div>
+        <div class="form-group">
+          <label for="k-billing">Billing type</label>
+          <select id="k-billing">
+            <option value="monthly">Monthly subscription</option>
+            <option value="one-time">One-time project</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="k-client-status">Client status</label>
+          <select id="k-client-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="k-notiz">Note (optional)</label>
+          <textarea id="k-notiz" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="kunde-delete" style="margin-right:auto;display:none;color:#B91C1C;border-color:#FECACA">Delete client</button>
+          <button type="button" class="btn btn-outline" id="modal-kunde-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-rechnung">
+    <div class="modal">
+      <h2>New invoice</h2>
+      <form id="form-rechnung">
+        <input type="hidden" id="r-kunde-id">
+        <input type="hidden" id="r-id">
+        <div class="form-group">
+          <label for="r-nummer">Invoice number</label>
+          <input type="text" id="r-nummer" placeholder="KR-2024-001" required>
+        </div>
+        <div class="form-group">
+          <label for="r-faellig">Due date</label>
+          <input type="date" id="r-faellig" required>
+        </div>
+        <div class="form-group">
+          <label for="r-betrag">Amount (€, optional)</label>
+          <input type="number" id="r-betrag" step="0.01" min="0" placeholder="1200">
+        </div>
+        <div class="form-group">
+          <label for="r-status">Status</label>
+          <select id="r-status">
+            <option value="offen">Open</option>
+            <option value="gesendet">Sent</option>
+            <option value="bezahlt">Paid</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="r-pdf">Upload PDF</label>
+          <input type="file" id="r-pdf" accept="application/pdf">
+        </div>
+        <div class="form-group">
+          <label for="r-notiz">Note (optional)</label>
+          <textarea id="r-notiz" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="modal-rechnung-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay pdf-modal" id="modal-pdf">
+    <div class="modal">
+      <h2 id="pdf-title">Invoice PDF</h2>
+      <iframe id="pdf-frame"></iframe>
+      <div class="modal-actions" style="margin-top:16px">
+        <a id="pdf-download" class="btn btn-secondary" download>Download PDF</a>
+        <button type="button" class="btn btn-outline" id="pdf-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-contract">
+    <div class="modal">
+      <h2 id="modal-contract-title">Contract</h2>
+      <form id="form-contract">
+        <input type="hidden" id="c-kunde-id">
+        <div class="form-group">
+          <label for="c-start">Contract start</label>
+          <input type="date" id="c-start">
+        </div>
+        <div class="form-group">
+          <label for="c-end">Contract end</label>
+          <input type="date" id="c-end">
+        </div>
+        <div class="form-group">
+          <label for="c-payment-day">Payment day of month</label>
+          <input type="number" id="c-payment-day" min="1" max="31" step="1" placeholder="e.g. 5">
+          <p class="hint" style="font-style:normal;margin-top:6px">Shown on Calendar each month while the contract is active (1–31).</p>
+        </div>
+        <div class="form-group" id="c-monthly-group">
+          <label for="c-monthly">Monthly payment (MXN)</label>
+          <input type="number" id="c-monthly" step="0.01" min="0" placeholder="1000">
+          <p class="hint" style="font-style:normal;margin-top:6px">Auto-added to planned revenue each month in the contract period.</p>
+        </div>
+        <div class="form-group">
+          <label for="c-posts">Posts per week</label>
+          <input type="number" id="c-posts" min="0" step="1" placeholder="3">
+        </div>
+        <div class="form-group">
+          <label for="c-stories">Stories per week</label>
+          <input type="number" id="c-stories" min="0" step="1" placeholder="5">
+        </div>
+        <p class="hint" style="margin-top:-8px">Leave dates empty to clear the contract. Posts/stories are for the team platform sync.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="modal-contract-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-shooting">
+    <div class="modal" style="max-width:480px">
+      <h2 id="modal-shooting-title">Shooting</h2>
+      <form id="form-shooting">
+        <input type="hidden" id="s-id">
+        <input type="hidden" id="s-kunde-id">
+        <div class="form-group">
+          <label for="s-datetime">Date & time</label>
+          <input type="datetime-local" id="s-datetime" required>
+        </div>
+        <div class="form-group">
+          <label for="s-location">Location (optional)</label>
+          <input type="text" id="s-location" placeholder="Studio, client office…">
+        </div>
+        <div class="form-group">
+          <label>Team members</label>
+          <div class="team-checkboxes" id="s-team-boxes"></div>
+        </div>
+        <div class="form-group">
+          <label for="s-status">Status</label>
+          <select id="s-status">
+            <option value="planned">Planned</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="s-notes">Notes (optional)</label>
+          <textarea id="s-notes" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="shooting-delete" style="margin-right:auto;display:none">Delete</button>
+          <button type="button" class="btn btn-outline" id="modal-shooting-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-ops-alert">
+    <div class="modal">
+      <h2 id="ops-alert-title">Reminder</h2>
+      <p class="payment-check-text" id="ops-alert-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="ops-alert-dismiss">Dismiss for today</button>
+        <button type="button" class="btn btn-primary" id="ops-alert-ok">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-payment-check">
+    <div class="modal">
+      <h2>Payment received?</h2>
+      <p class="payment-check-text" id="payment-check-text"></p>
+      <p class="payment-check-meta" id="payment-check-meta"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="payment-check-no">Not yet</button>
+        <button type="button" class="btn btn-primary" id="payment-check-yes">Yes, mark as paid</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay settings-modal" id="modal-einstellungen">
+    <div class="modal">
+      <h2>Settings</h2>
+      <div class="slack-box">
+        <h3>Slack notifications (Free plan OK)</h3>
+        <label class="slack-enable">
+          <input type="checkbox" id="e-slack-enabled" checked>
+          Send reminders to Slack
+        </label>
+        <div class="form-group" style="margin-bottom:10px">
+          <label for="e-slack-relay">Google Apps Script relay URL</label>
+          <input type="url" id="e-slack-relay" placeholder="https://script.google.com/macros/s/…/exec">
+        </div>
+        <p class="hint" style="font-style:normal;margin-bottom:10px">
+          Paste the Web App URL from <code>kreatify-slack-relay.gs</code> (in this folder). Required for local use — Slack blocks direct browser requests.
+        </p>
+        <ol class="slack-steps">
+          <li>Slack: <strong>api.slack.com/apps</strong> → Create app → Incoming Webhooks → Add to channel → copy webhook URL</li>
+          <li>Open <strong>kreatify-slack-relay.gs</strong> → paste webhook → Deploy as Web app (Anyone)</li>
+          <li>Copy the <strong>/exec</strong> URL here → Save → Test</li>
+        </ol>
+        <button type="button" class="btn btn-outline" id="slack-test" style="width:100%">Send test message to Slack</button>
+      </div>
+      <div class="form-group">
+        <label for="e-erinnerung">Remind me X days before invoice due date</label>
+        <select id="e-erinnerung">
+          <option value="1">1 day</option>
+          <option value="2">2 days</option>
+          <option value="3" selected>3 days</option>
+          <option value="7">7 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="e-vertrag">Remind me X days before contract ends</label>
+        <select id="e-vertrag">
+          <option value="7">7 days</option>
+          <option value="14" selected>14 days</option>
+          <option value="21">21 days</option>
+          <option value="30">30 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="e-zahlung">Ask if paid X days after due date</label>
+        <select id="e-zahlung">
+          <option value="1">1 day</option>
+          <option value="2">2 days</option>
+          <option value="3" selected>3 days</option>
+          <option value="5">5 days</option>
+          <option value="7">7 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="e-grid1">First grid reminder (days before deadline)</label>
+        <select id="e-grid1">
+          <option value="15" selected>15 days</option>
+          <option value="14">14 days</option>
+          <option value="7">7 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="e-grid2">Second grid reminder (days before deadline)</label>
+        <select id="e-grid2">
+          <option value="10" selected>10 days</option>
+          <option value="7">7 days</option>
+          <option value="5">5 days</option>
+          <option value="3">3 days</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="e-shoot-plan">Remind to plan shooting (days before next month)</label>
+        <select id="e-shoot-plan">
+          <option value="10" selected>10 days</option>
+          <option value="7">7 days</option>
+          <option value="14">14 days</option>
+        </select>
+      </div>
+      <div class="modal-actions" style="flex-wrap:wrap;justify-content:flex-start">
+        <button type="button" class="btn btn-primary" id="einstellungen-save">Save</button>
+        <button type="button" class="btn btn-outline" id="einstellungen-export">Export JSON (for Team app)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'kreatify_data';
+    const STATUS_LABELS = { offen: 'Open', gesendet: 'Sent', bezahlt: 'Paid' };
+    const SHOOTING_LABELS = { planned: 'Planned', confirmed: 'Confirmed', completed: 'Completed' };
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const TEAM_MEMBERS = ['Andrea', 'Samuel', 'Victor'];
+
+    let state = {
+      kunden: [],
+      rechnungen: [],
+      shootings: [],
+      einstellungen: {
+        erinnerungTage: 3,
+        vertragErinnerungTage: 14,
+        zahlungNachfassTage: 3,
+        gridReminder1: 15,
+        gridReminder2: 10,
+        shootingPlanDaysBeforeMonth: 10,
+        slackEnabled: true,
+        slackRelayUrl: ''
+      }
+    };
+
+    let currentView = 'kunden';
+    let selectedKundeId = null;
+    let monatCursor = new Date();
+    let calCursor = new Date();
+    let bannerAction = null;
+    let paymentCheckQueue = [];
+    let currentPaymentCheck = null;
+    let opsAlertQueue = [];
+    let currentOpsAlert = null;
+    let clientFilter = 'active';
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          state = JSON.parse(raw);
+          if (!state.einstellungen) state.einstellungen = {};
+          const def = state.einstellungen;
+          if (def.erinnerungTage == null) def.erinnerungTage = 3;
+          if (def.vertragErinnerungTage == null) def.vertragErinnerungTage = 14;
+          if (def.zahlungNachfassTage == null) def.zahlungNachfassTage = 3;
+          if (def.gridReminder1 == null) def.gridReminder1 = 15;
+          if (def.gridReminder2 == null) def.gridReminder2 = 10;
+          if (def.shootingPlanDaysBeforeMonth == null) def.shootingPlanDaysBeforeMonth = 10;
+          if (def.slackEnabled == null) def.slackEnabled = true;
+          if (def.slackRelayUrl == null) def.slackRelayUrl = '';
+          if (!state.shootings) state.shootings = [];
+          migrateState();
+        } catch (e) {
+          initSampleData();
+        }
+      } else {
+        initSampleData();
+      }
+    }
+
+    function migrateState() {
+      state.kunden.forEach(k => {
+        if (!k.billingType) k.billingType = 'one-time';
+        if (k.contractStart === undefined) k.contractStart = null;
+        if (k.contractEnd === undefined) k.contractEnd = null;
+        if (!k.clientStatus) k.clientStatus = 'active';
+        if (k.monthlyPayment === undefined) k.monthlyPayment = null;
+        if (!k.monthlyCurrency) k.monthlyCurrency = 'MXN';
+        if (k.postsPerWeek === undefined) k.postsPerWeek = null;
+        if (k.storiesPerWeek === undefined) k.storiesPerWeek = null;
+        if (k.paymentDayOfMonth === undefined) k.paymentDayOfMonth = null;
+      });
+    }
+
+    function isClientActive(k) {
+      return (k.clientStatus || 'active') === 'active';
+    }
+
+    function isClientVisible(k) {
+      if (clientFilter === 'all') return true;
+      return (k.clientStatus || 'active') === clientFilter;
+    }
+
+    function formatMoney(n, currency) {
+      if (n == null || n === '') return '—';
+      const cur = currency || 'EUR';
+      try {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n);
+      } catch (e) {
+        return `${n} ${cur}`;
+      }
+    }
+
+    function monthOverlapsContractPeriod(k, year, month) {
+      if (!k.contractStart) return false;
+      const monthStart = new Date(year, month, 1);
+      monthStart.setHours(0, 0, 0, 0);
+      const monthEnd = new Date(year, month + 1, 0);
+      monthEnd.setHours(0, 0, 0, 0);
+      const cStart = parseDate(k.contractStart);
+      const cEnd = k.contractEnd ? parseDate(k.contractEnd) : null;
+      if (monthEnd < cStart) return false;
+      if (cEnd && monthStart > cEnd) return false;
+      return true;
+    }
+
+    function paymentDayInMonth(year, month, dayOfMonth) {
+      if (!dayOfMonth || dayOfMonth < 1) return null;
+      const dim = new Date(year, month + 1, 0).getDate();
+      return Math.min(Math.max(1, parseInt(dayOfMonth, 10)), dim);
+    }
+
+    function monthOverlapsContract(k, year, month) {
+      if (!k.contractStart || k.billingType !== 'monthly' || !k.monthlyPayment) return false;
+      const monthStart = new Date(year, month, 1);
+      monthStart.setHours(0, 0, 0, 0);
+      const monthEnd = new Date(year, month + 1, 0);
+      monthEnd.setHours(0, 0, 0, 0);
+      const cStart = parseDate(k.contractStart);
+      const cEnd = k.contractEnd ? parseDate(k.contractEnd) : null;
+      if (monthEnd < cStart) return false;
+      if (cEnd && monthStart > cEnd) return false;
+      return true;
+    }
+
+    function getContractPlannedForMonth(year, month) {
+      return state.kunden
+        .filter(k => monthOverlapsContract(k, year, month) && isClientActive(k))
+        .map(k => ({
+          kundeId: k.id,
+          name: getKundenName(k),
+          amount: k.monthlyPayment,
+          currency: k.monthlyCurrency || 'MXN',
+          virtualId: `contract_${k.id}_${year}_${month}`
+        }));
+    }
+
+    function initSampleData() {
+      const k1 = uid();
+      const k2 = uid();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const in2 = new Date(today);
+      in2.setDate(in2.getDate() + 2);
+      const in8 = new Date(today);
+      in8.setDate(in8.getDate() + 8);
+      const cStart = new Date(today);
+      cStart.setMonth(cStart.getMonth() - 1);
+      const cEnd = new Date(today);
+      cEnd.setMonth(cEnd.getMonth() + 2);
+      const duePast = new Date(today);
+      duePast.setDate(duePast.getDate() - 4);
+
+      state = {
+        kunden: [
+          { id: k1, firmenname: 'Design Studio GmbH', email: 'laura@example.com', notiz: '', billingType: 'monthly', clientStatus: 'active', contractStart: fmtDate(cStart), contractEnd: fmtDate(cEnd), paymentDayOfMonth: 5, monthlyPayment: 1000, monthlyCurrency: 'MXN', postsPerWeek: 3, storiesPerWeek: 5 },
+          { id: k2, firmenname: 'Jonas Weber — Freelance', email: 'jonas@example.com', notiz: '', billingType: 'one-time', clientStatus: 'active', contractStart: null, contractEnd: null, monthlyPayment: null, postsPerWeek: null, storiesPerWeek: null }
+        ],
+        rechnungen: [
+          { id: uid(), kundeId: k1, nummer: 'KR-2024-001', faelligAm: fmtDate(in2), betrag: 1200, status: 'offen', pdf: null, notiz: '' },
+          { id: uid(), kundeId: k2, nummer: 'KR-2024-002', faelligAm: fmtDate(in8), betrag: 850, status: 'gesendet', pdf: null, notiz: '' },
+          { id: uid(), kundeId: k1, nummer: 'KR-2024-000', faelligAm: fmtDate(duePast), betrag: 1200, status: 'gesendet', pdf: null, notiz: '' }
+        ],
+        shootings: [],
+        einstellungen: { erinnerungTage: 3, vertragErinnerungTage: 14, zahlungNachfassTage: 3, gridReminder1: 15, gridReminder2: 10, shootingPlanDaysBeforeMonth: 10, slackEnabled: true, slackRelayUrl: '' }
+      };
+      saveToStorage();
+    }
+
+    function addMonths(date, months) {
+      const d = new Date(date.getTime());
+      const day = d.getDate();
+      d.setMonth(d.getMonth() + months);
+      if (d.getDate() < day) d.setDate(0);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function isGridClient(k) {
+      return k.billingType === 'monthly' && k.contractStart;
+    }
+
+    function getNextGridDeadline(k) {
+      if (!isGridClient(k)) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (k.contractEnd && parseDate(k.contractEnd) < today) return null;
+      let deadline = addMonths(parseDate(k.contractStart), 1);
+      while (deadline <= today) deadline = addMonths(deadline, 1);
+      if (k.contractEnd && deadline > parseDate(k.contractEnd)) return null;
+      return fmtDate(deadline);
+    }
+
+    function getGridDeadlinesForMonth(k, year, month) {
+      if (!isGridClient(k)) return [];
+      const list = [];
+      let d = addMonths(parseDate(k.contractStart), 1);
+      const limit = k.contractEnd ? parseDate(k.contractEnd) : addMonths(new Date(), 36);
+      let guard = 0;
+      while (d <= limit && guard < 48) {
+        if (d.getFullYear() === year && d.getMonth() === month) list.push(fmtDate(d));
+        d = addMonths(d, 1);
+        guard++;
+      }
+      return list;
+    }
+
+    function getGridDaysClass(days) {
+      if (days < 0) return 'urgent';
+      if (days <= 10) return 'soon';
+      return 'ok';
+    }
+
+    function getGridStatusLabel(days) {
+      if (days < 0) return { label: 'Overdue', cls: 'red' };
+      if (days === 0) return { label: 'Due today', cls: 'red' };
+      if (days <= 10) return { label: 'Due soon', cls: 'orange' };
+      if (days <= 15) return { label: 'Upcoming', cls: 'yellow' };
+      return { label: 'Scheduled', cls: 'green' };
+    }
+
+    function getNextMonthStart() {
+      const t = new Date();
+      return new Date(t.getFullYear(), t.getMonth() + 1, 1);
+    }
+
+    function hasShootingInMonth(kundeId, year, month) {
+      return state.shootings.some(s => {
+        if (s.kundeId !== kundeId) return false;
+        const d = parseDate((s.scheduledAt || '').split('T')[0]);
+        return d.getFullYear() === year && d.getMonth() === month;
+      });
+    }
+
+    function needsShootingPlanReminder(k) {
+      if (k.billingType !== 'monthly' || !k.contractStart) return false;
+      const nextMonth = getNextMonthStart();
+      const days = state.einstellungen.shootingPlanDaysBeforeMonth ?? 10;
+      if (daysUntil(fmtDate(nextMonth)) !== days) return false;
+      return !hasShootingInMonth(k.id, nextMonth.getFullYear(), nextMonth.getMonth());
+    }
+
+    function getShootingsForKunde(kundeId) {
+      return state.shootings
+        .filter(s => s.kundeId === kundeId)
+        .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function fmtDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function parseDate(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setHours(0, 0, 0, 0);
+      return dt;
+    }
+
+    function daysUntil(dateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = parseDate(dateStr);
+      return Math.round((target - today) / 86400000);
+    }
+
+    function formatDate(dateStr) {
+      const d = parseDate(dateStr);
+      return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function formatEUR(n) {
+      if (n == null || n === '') return '—';
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(n);
+    }
+
+    function getBillingLabel(type) {
+      return type === 'monthly' ? 'Monthly' : 'One-time';
+    }
+
+    function statusOptions(selected) {
+      return ['offen', 'gesendet', 'bezahlt']
+        .map(s => `<option value="${s}" ${s === selected ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`)
+        .join('');
+    }
+
+    function getKunde(id) {
+      return state.kunden.find(k => k.id === id);
+    }
+
+    function getKundenName(k) {
+      if (k.firmenname && k.firmenname.trim()) return k.firmenname.trim();
+      const legacy = `${k.vorname || ''} ${k.nachname || ''}`.trim();
+      return legacy || 'Client';
+    }
+
+    function getRechnungenForKunde(kundeId) {
+      return state.rechnungen
+        .filter(r => r.kundeId === kundeId)
+        .sort((a, b) => parseDate(b.faelligAm) - parseDate(a.faelligAm));
+    }
+
+    function getNextOpenRechnung(kundeId) {
+      const open = state.rechnungen
+        .filter(r => r.kundeId === kundeId && r.status !== 'bezahlt')
+        .sort((a, b) => parseDate(a.faelligAm) - parseDate(b.faelligAm));
+      return open[0] || null;
+    }
+
+    function allPaid(kundeId) {
+      const rs = state.rechnungen.filter(r => r.kundeId === kundeId);
+      return rs.length > 0 && rs.every(r => r.status === 'bezahlt');
+    }
+
+    function dueBadge(rechnung) {
+      if (!rechnung || rechnung.status === 'bezahlt') return null;
+      const days = daysUntil(rechnung.faelligAm);
+      if (days < 0) return { cls: 'red', text: `OVERDUE – ${Math.abs(days)}d` };
+      if (days === 0) return { cls: 'red', text: 'TODAY' };
+      if (days <= 3) return { cls: 'orange', text: `${days}d` };
+      if (days <= 7) return { cls: 'yellow', text: `${days}d` };
+      return { cls: 'gray', text: `${days}d` };
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('.sidebar-btn[data-view]').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === view);
+      });
+      document.getElementById('view-kunden').classList.toggle('active', view === 'kunden');
+      document.getElementById('view-monat').classList.toggle('active', view === 'monat');
+      document.getElementById('view-contracts').classList.toggle('active', view === 'contracts');
+      document.getElementById('view-calendar').classList.toggle('active', view === 'calendar');
+      if (view === 'kunden') renderKundenListe();
+      if (view === 'monat') renderMonatsübersicht();
+      if (view === 'contracts') renderContracts();
+      if (view === 'calendar') renderCalendar();
+    }
+
+    function renderCalendar() {
+      const y = calCursor.getFullYear();
+      const m = calCursor.getMonth();
+      document.getElementById('cal-title').textContent = `${MONTH_NAMES[m]} ${y}`;
+      const first = new Date(y, m, 1);
+      const startPad = first.getDay();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const todayStr = fmtDate(new Date());
+      const eventsByDay = {};
+
+      state.kunden.forEach(k => {
+        if (!isClientActive(k)) return;
+        if (k.paymentDayOfMonth && monthOverlapsContractPeriod(k, y, m)) {
+          const day = paymentDayInMonth(y, m, k.paymentDayOfMonth);
+          if (day) {
+            if (!eventsByDay[day]) eventsByDay[day] = [];
+            const amt = k.monthlyPayment ? ` · ${formatMoney(k.monthlyPayment, k.monthlyCurrency || 'MXN')}` : '';
+            eventsByDay[day].push({ type: 'payment', title: `Payment: ${getKundenName(k)}${amt}`, kundeId: k.id });
+          }
+        }
+        if (k.contractEnd) {
+          const end = parseDate(k.contractEnd);
+          if (end.getFullYear() === y && end.getMonth() === m) {
+            const day = end.getDate();
+            if (!eventsByDay[day]) eventsByDay[day] = [];
+            eventsByDay[day].push({ type: 'content-end', title: `Content end: ${getKundenName(k)}`, kundeId: k.id });
+          }
+        }
+      });
+
+      let html = WEEKDAYS.map(w => `<div class="cal-head">${w}</div>`).join('');
+      const totalCells = Math.ceil((startPad + daysInMonth) / 7) * 7;
+      for (let i = 0; i < totalCells; i++) {
+        const dayNum = i - startPad + 1;
+        if (i < startPad || dayNum > daysInMonth) {
+          html += '<div class="cal-day other-month"></div>';
+          continue;
+        }
+        const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const evs = eventsByDay[dayNum] || [];
+        const evHtml = evs.map(e =>
+          `<div class="cal-event ${e.type}" data-kid="${e.kundeId || ''}" data-sid="${e.shootingId || ''}" title="${esc(e.title)}">${esc(e.title)}</div>`
+        ).join('');
+        html += `<div class="cal-day${isToday ? ' today' : ''}"><div class="cal-day-num">${dayNum}</div>${evHtml}</div>`;
+      }
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = html;
+      grid.querySelectorAll('.cal-event').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (el.dataset.kid) openKundenDetail(el.dataset.kid);
+        });
+      });
+    }
+
+    function buildTeamCheckboxes(containerId, selected) {
+      const box = document.getElementById(containerId);
+      box.innerHTML = TEAM_MEMBERS.map(name => `
+        <label><input type="checkbox" name="team" value="${name}" ${(selected || []).includes(name) ? 'checked' : ''}> ${name}</label>
+      `).join('');
+    }
+
+    function getSelectedTeam(containerId) {
+      return [...document.querySelectorAll(`#${containerId} input[name="team"]:checked`)].map(i => i.value);
+    }
+
+    function openShootingModal(kundeId, shootingId = null) {
+      const s = shootingId ? state.shootings.find(x => x.id === shootingId) : null;
+      const k = getKunde(kundeId);
+      document.getElementById('modal-shooting-title').textContent = s ? 'Edit shooting' : `Add shooting — ${k ? getKundenName(k) : ''}`;
+      document.getElementById('s-id').value = s ? s.id : '';
+      document.getElementById('s-kunde-id').value = kundeId;
+      document.getElementById('s-datetime').value = s ? s.scheduledAt : '';
+      document.getElementById('s-location').value = s ? (s.location || '') : '';
+      document.getElementById('s-status').value = s ? s.status : 'planned';
+      document.getElementById('s-notes').value = s ? (s.notes || '') : '';
+      buildTeamCheckboxes('s-team-boxes', s ? s.team : []);
+      document.getElementById('shooting-delete').style.display = s ? 'inline-block' : 'none';
+      openModal('modal-shooting');
+    }
+
+    function renderShootingItem(s) {
+      const team = (s.team || []).map(t => `<span class="team-tag">${esc(t)}</span>`).join('');
+      return `
+        <div class="shooting-item">
+          <div class="shooting-item-header">
+            <div>
+              <div style="font-weight:700">${formatDateTime(s.scheduledAt)}</div>
+              ${s.location ? `<div style="font-size:13px;color:var(--muted);margin-top:4px">📍 ${esc(s.location)}</div>` : ''}
+            </div>
+            <span class="shooting-status ${s.status}">${SHOOTING_LABELS[s.status] || s.status}</span>
+          </div>
+          ${team ? `<div class="team-tags">${team}</div>` : ''}
+          ${s.notes ? `<p class="hint" style="margin-top:8px;font-style:normal">${esc(s.notes)}</p>` : ''}
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button type="button" class="btn btn-outline btn-edit-shooting" data-sid="${s.id}">Edit</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function getOperationalAlerts() {
+      const alerts = [];
+      const g1 = state.einstellungen.gridReminder1 ?? 15;
+      const g2 = state.einstellungen.gridReminder2 ?? 10;
+      const todayKey = fmtDate(new Date());
+
+      state.kunden.forEach(k => {
+        if (!isClientActive(k)) return;
+        const next = getNextGridDeadline(k);
+        if (!next) return;
+        const days = daysUntil(next);
+        const name = getKundenName(k);
+        if (days === g1 && !sessionStorage.getItem(`ops_grid_${g1}_${k.id}_${next}`)) {
+          alerts.push({
+            key: `ops_grid_${g1}_${k.id}_${next}`,
+            title: 'Content grid reminder',
+            text: `Attention: Monthly grid for ${name} must be delivered soon. Due ${formatDate(next)} (${g1} days).`,
+            action: () => setView('calendar')
+          });
+        }
+        if (days === g2 && !sessionStorage.getItem(`ops_grid_${g2}_${k.id}_${next}`)) {
+          alerts.push({
+            key: `ops_grid_${g2}_${k.id}_${next}`,
+            title: 'Content grid reminder',
+            text: `Attention: Monthly grid for ${name} must be delivered soon. Due ${formatDate(next)} (${g2} days).`,
+            action: () => setView('calendar')
+          });
+        }
+        if (needsShootingPlanReminder(k) && !sessionStorage.getItem(`ops_shootplan_${k.id}_${todayKey}`)) {
+          alerts.push({
+            key: `ops_shootplan_${k.id}_${todayKey}`,
+            title: 'Shooting planning',
+            text: `Reminder: Plan next month's shooting for ${name}.`,
+            action: () => { openKundenDetail(k.id); }
+          });
+        }
+      });
+      return alerts;
+    }
+
+    function showNextOpsAlert() {
+      if (document.getElementById('modal-ops-alert').classList.contains('open')) return;
+      if (document.getElementById('modal-payment-check').classList.contains('open')) return;
+      opsAlertQueue = getOperationalAlerts();
+      if (opsAlertQueue.length === 0) {
+        currentOpsAlert = null;
+        return;
+      }
+      currentOpsAlert = opsAlertQueue[0];
+      document.getElementById('ops-alert-title').textContent = currentOpsAlert.title;
+      document.getElementById('ops-alert-text').textContent = currentOpsAlert.text;
+      openModal('modal-ops-alert');
+    }
+
+    function dismissOpsAlert() {
+      if (currentOpsAlert && currentOpsAlert.key) {
+        sessionStorage.setItem(currentOpsAlert.key, '1');
+      }
+    }
+
+    function hasContract(k) {
+      return !!(k.contractStart && k.contractEnd);
+    }
+
+    function getContractStatus(k) {
+      if (!hasContract(k)) return { type: 'none', label: 'No contract', cls: 'gray' };
+      const daysEnd = daysUntil(k.contractEnd);
+      const daysStart = daysUntil(k.contractStart);
+      if (daysStart > 0) return { type: 'upcoming', label: `Starts in ${daysStart}d`, cls: 'yellow' };
+      if (daysEnd < 0) return { type: 'ended', label: 'Ended — renew contract', cls: 'red' };
+      const remind = state.einstellungen.vertragErinnerungTage ?? 14;
+      if (daysEnd <= remind) return { type: 'ending', label: `${daysEnd}d left — renew soon`, cls: 'orange' };
+      return { type: 'active', label: 'Active', cls: 'green' };
+    }
+
+    function contractProgress(k) {
+      if (!hasContract(k)) return 0;
+      const start = parseDate(k.contractStart).getTime();
+      const end = parseDate(k.contractEnd).getTime();
+      const now = Date.now();
+      if (now <= start) return 0;
+      if (now >= end) return 100;
+      return Math.round(((now - start) / (end - start)) * 100);
+    }
+
+    function renderContracts() {
+      const list = document.getElementById('contract-list');
+      const sorted = [...state.kunden].sort((a, b) => {
+        const sa = getContractStatus(a);
+        const sb = getContractStatus(b);
+        const order = { ended: 0, ending: 1, none: 2, active: 3, upcoming: 4 };
+        if (order[sa.type] !== order[sb.type]) return order[sa.type] - order[sb.type];
+        if (!a.contractEnd) return 1;
+        if (!b.contractEnd) return -1;
+        return parseDate(a.contractEnd) - parseDate(b.contractEnd);
+      });
+
+      if (sorted.length === 0) {
+        list.innerHTML = '<div class="empty-state">No clients yet. Add a client first.</div>';
+        return;
+      }
+
+      list.innerHTML = sorted.map(k => {
+        const st = getContractStatus(k);
+        const dates = hasContract(k)
+          ? `<span class="contract-dates"><strong>${formatDate(k.contractStart)}</strong> → <strong>${formatDate(k.contractEnd)}</strong>${k.paymentDayOfMonth ? ` · Payment day <strong>${k.paymentDayOfMonth}</strong>` : ''}</span>`
+          : '<span class="contract-dates hint">No contract period set</span>';
+        const bar = hasContract(k) ? `<div class="contract-bar-wrap"><div class="contract-bar" style="width:${contractProgress(k)}%"></div></div>` : '';
+
+        return `
+          <article class="contract-card" data-kunde-id="${k.id}">
+            <div>
+              <div class="kunden-name">${esc(getKundenName(k))}</div>
+              ${dates}
+              ${bar}
+            </div>
+            <div class="badge-block"><span class="badge ${st.cls}">${st.label}</span></div>
+            <div class="actions" style="grid-column:1/-1">
+              <button type="button" class="btn btn-primary btn-edit-contract" data-kid="${k.id}">Edit contract</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.btn-edit-contract').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openContractModal(getKunde(btn.dataset.kid));
+        });
+      });
+    }
+
+    function openContractModal(k) {
+      if (!k) return;
+      document.getElementById('modal-contract-title').textContent = `Contract — ${getKundenName(k)}`;
+      document.getElementById('c-kunde-id').value = k.id;
+      document.getElementById('c-start').value = k.contractStart || '';
+      document.getElementById('c-end').value = k.contractEnd || '';
+      document.getElementById('c-payment-day').value = k.paymentDayOfMonth != null ? k.paymentDayOfMonth : '';
+      document.getElementById('c-monthly').value = k.monthlyPayment != null ? k.monthlyPayment : '';
+      document.getElementById('c-posts').value = k.postsPerWeek != null ? k.postsPerWeek : '';
+      document.getElementById('c-stories').value = k.storiesPerWeek != null ? k.storiesPerWeek : '';
+      const monthlyGroup = document.getElementById('c-monthly-group');
+      monthlyGroup.style.display = k.billingType === 'monthly' ? 'block' : 'none';
+      openModal('modal-contract');
+    }
+
+    function renderKundenListe() {
+      const list = document.getElementById('kunden-list');
+      const visible = state.kunden.filter(isClientVisible);
+      const sorted = [...visible].sort((a, b) => {
+        const activeA = isClientActive(a) ? 0 : 1;
+        const activeB = isClientActive(b) ? 0 : 1;
+        if (activeA !== activeB) return activeA - activeB;
+        const ra = getNextOpenRechnung(a.id);
+        const rb = getNextOpenRechnung(b.id);
+        const paidA = allPaid(a.id) || !ra;
+        const paidB = allPaid(b.id) || !rb;
+        if (paidA && !paidB) return 1;
+        if (!paidA && paidB) return -1;
+        if (!ra && !rb) return 0;
+        if (!ra) return 1;
+        if (!rb) return -1;
+        return parseDate(ra.faelligAm) - parseDate(rb.faelligAm);
+      });
+
+      if (state.kunden.length === 0) {
+        list.innerHTML = '<div class="empty-state">No clients yet. Click „+“ in the sidebar.</div>';
+        return;
+      }
+      if (sorted.length === 0) {
+        list.innerHTML = `<div class="empty-state">No ${clientFilter} clients. Change the filter above or add a new client.</div>`;
+        return;
+      }
+
+      list.innerHTML = sorted.map(k => {
+        const next = getNextOpenRechnung(k.id);
+        const paid = allPaid(k.id);
+        const hasRechnungen = state.rechnungen.some(r => r.kundeId === k.id);
+        const cardPaid = paid && hasRechnungen;
+        const badge = next ? dueBadge(next) : null;
+        const noPdf = next && !next.pdf;
+        const billingType = k.billingType || 'one-time';
+
+        let badgeHtml = '';
+        if (cardPaid) {
+          badgeHtml = '<span class="badge green">All paid ✓</span>';
+        } else if (badge) {
+          badgeHtml = `<span class="badge ${badge.cls}">${badge.text}</span>`;
+        }
+
+        const payHint = k.paymentDayOfMonth && hasContract(k)
+          ? ` · Payment day: <strong>${k.paymentDayOfMonth}</strong>`
+          : '';
+
+        let meta = '';
+        if (next) {
+          meta = `Next invoice: <strong>${formatDate(next.faelligAm)}</strong> · ${next.nummer}${payHint}`;
+        } else if (k.paymentDayOfMonth && hasContract(k)) {
+          meta = `Payment day: <strong>${k.paymentDayOfMonth}</strong> of each month`;
+        } else if (!hasRechnungen) {
+          meta = 'No invoices yet';
+        } else {
+          meta = 'No open invoices';
+        }
+
+        const pdfHint = next && noPdf ? '<span class="hint">No PDF on file</span>' : '';
+
+        const cStatus = k.clientStatus || 'active';
+        return `
+          <article class="kunden-card ${cardPaid ? 'paid-all' : ''} ${cStatus === 'inactive' ? 'inactive-client' : ''}" data-kunde-id="${k.id}" data-scroll-id="${k.id}">
+            <div class="name-block">
+              <div class="kunden-name">${esc(getKundenName(k))}</div>
+              <div class="kunden-meta-row">
+                <span class="billing-badge ${billingType}">${getBillingLabel(billingType)}</span>
+                <span class="client-status-badge ${cStatus}">${cStatus === 'active' ? 'Active' : 'Inactive'}</span>
+              </div>
+            </div>
+            <div class="badge-block">${badgeHtml}</div>
+            <div class="meta">${meta} ${pdfHint}</div>
+            <div class="actions" onclick="event.stopPropagation()">
+              ${next ? `
+                <button class="btn btn-primary btn-email" data-rid="${next.id}">✉️ Send email</button>
+                <button class="btn btn-outline btn-pdf" data-rid="${next.id}" ${noPdf ? 'disabled' : ''}>📄 View PDF</button>
+              ` : ''}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.kunden-card').forEach(card => {
+        card.addEventListener('click', () => openKundenDetail(card.dataset.kundeId));
+      });
+      list.querySelectorAll('.btn-email').forEach(btn => {
+        btn.addEventListener('click', () => sendEmail(btn.dataset.rid));
+      });
+      list.querySelectorAll('.btn-pdf').forEach(btn => {
+        btn.addEventListener('click', () => showPdf(btn.dataset.rid));
+      });
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function openKundenDetail(kundeId) {
+      selectedKundeId = kundeId;
+      renderKundenDetail();
+      document.getElementById('panel-overlay').classList.add('open');
+      document.getElementById('slide-panel').classList.add('open');
+    }
+
+    function closeKundenDetail() {
+      selectedKundeId = null;
+      document.getElementById('panel-overlay').classList.remove('open');
+      document.getElementById('slide-panel').classList.remove('open');
+    }
+
+    function renderKundenDetail() {
+      const panel = document.getElementById('slide-panel');
+      const k = getKunde(selectedKundeId);
+      if (!k) return;
+
+      const rechnungen = getRechnungenForKunde(k.id);
+      const billingType = k.billingType || 'one-time';
+      const shootings = getShootingsForKunde(k.id);
+      const contractInfo = hasContract(k) ? `
+        <div style="background:#F8FAFC;border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600">Contract</div>
+          <div style="font-size:15px;font-weight:600;margin-top:6px">${formatDate(k.contractStart)} – ${formatDate(k.contractEnd)}</div>
+          ${k.paymentDayOfMonth ? `<div style="font-size:14px;margin-top:8px">Payment day: <strong>${k.paymentDayOfMonth}</strong> of each month</div>` : ''}
+          ${k.contractEnd ? `<div style="font-size:14px;margin-top:6px;color:var(--muted)">Content ends: <strong>${formatDate(k.contractEnd)}</strong></div>` : ''}
+        </div>
+      ` : '';
+
+      panel.innerHTML = `
+        <div class="panel-header">
+          <div>
+            <h2 style="font-size:22px;font-weight:700">${esc(getKundenName(k))}</h2>
+            <p style="margin-top:8px">
+              <span class="billing-badge ${billingType}">${getBillingLabel(billingType)}</span>
+              <span class="client-status-badge ${k.clientStatus || 'active'}">${(k.clientStatus || 'active') === 'active' ? 'Active' : 'Inactive'}</span>
+            </p>
+            ${k.monthlyPayment ? `<p style="font-size:13px;margin-top:6px">Monthly: ${formatMoney(k.monthlyPayment, k.monthlyCurrency || 'MXN')}</p>` : ''}
+            ${k.email ? `<p style="color:var(--muted);font-size:14px;margin-top:8px">${esc(k.email)}</p>` : ''}
+            ${k.notiz ? `<p style="font-size:13px;margin-top:8px">${esc(k.notiz)}</p>` : ''}
+          </div>
+          <button class="panel-close" id="panel-close">×</button>
+        </div>
+        <button class="btn btn-outline" id="btn-edit-kunde" style="margin-bottom:8px">Edit client</button>
+        <button class="btn btn-outline" id="btn-delete-kunde" style="margin-bottom:8px;color:#B91C1C;border-color:#FECACA">Delete client</button>
+        <button class="btn btn-outline" id="btn-edit-contract-detail" style="margin-bottom:8px">Edit contract</button>
+        ${contractInfo}
+        <h3 class="section-title">Shootings</h3>
+        <button class="btn btn-primary" id="btn-add-shooting" style="margin-bottom:12px;width:100%">+ Schedule shooting</button>
+        <div id="panel-shootings">
+          ${shootings.length === 0 ? '<p class="hint">No shootings scheduled.</p>' : shootings.map(s => renderShootingItem(s)).join('')}
+        </div>
+        <h3 class="section-title">Invoices</h3>
+        <button class="btn btn-outline" id="btn-neue-rechnung" style="margin-bottom:12px;width:100%">+ Add invoice</button>
+        <div id="panel-rechnungen">
+          ${rechnungen.length === 0 ? '<p class="hint">No invoices yet.</p>' : rechnungen.map(r => renderRechnungItem(r, k)).join('')}
+        </div>
+      `;
+
+      document.getElementById('panel-close').onclick = closeKundenDetail;
+      document.getElementById('btn-edit-kunde').onclick = () => openKundeModal(k);
+      document.getElementById('btn-delete-kunde').onclick = () => deleteKunde(k.id);
+      document.getElementById('btn-edit-contract-detail').onclick = () => openContractModal(k);
+      document.getElementById('btn-add-shooting').onclick = () => openShootingModal(k.id);
+      document.getElementById('btn-neue-rechnung').onclick = () => openRechnungModal(k.id);
+
+      panel.querySelectorAll('.btn-edit-shooting').forEach(b => {
+        b.onclick = (e) => { e.stopPropagation(); openShootingModal(k.id, b.dataset.sid); };
+      });
+
+      panel.querySelectorAll('.btn-detail-email').forEach(b => {
+        b.onclick = (e) => { e.stopPropagation(); sendEmail(b.dataset.rid); };
+      });
+      panel.querySelectorAll('.btn-detail-pdf').forEach(b => {
+        b.onclick = (e) => { e.stopPropagation(); showPdf(b.dataset.rid); };
+      });
+      panel.querySelectorAll('.status-toggle').forEach(sel => {
+        sel.onchange = () => {
+          const r = state.rechnungen.find(x => x.id === sel.dataset.rid);
+          if (r) { r.status = sel.value; saveToStorage(); renderKundenDetail(); renderKundenListe(); checkFaelligkeiten(); }
+        };
+      });
+      panel.querySelectorAll('.btn-edit-rechnung').forEach(b => {
+        b.onclick = (e) => { e.stopPropagation(); openRechnungModal(k.id, b.dataset.rid); };
+      });
+    }
+
+    function renderRechnungItem(r, k) {
+      const b = dueBadge(r.status !== 'bezahlt' ? r : null);
+      const badgeExtra = b ? `<span class="badge ${b.cls}" style="font-size:11px">${b.text}</span>` : '';
+      return `
+        <div class="rechnung-item">
+          <div class="rechnung-item-header">
+            <div>
+              <div class="rechnung-nr">${esc(r.nummer)}</div>
+              <div style="font-size:13px;color:var(--muted);margin-top:4px">Due: ${formatDate(r.faelligAm)} ${r.betrag != null ? '· ' + formatEUR(r.betrag) : ''}</div>
+            </div>
+            <span class="status-badge ${r.status}">${STATUS_LABELS[r.status] || r.status}</span>
+          </div>
+          ${badgeExtra}
+          ${r.notiz ? `<p class="hint" style="margin:8px 0">${esc(r.notiz)}</p>` : ''}
+          ${!r.pdf ? '<p class="hint">No PDF on file</p>' : ''}
+          <div style="margin:10px 0">
+            <label style="font-size:12px;color:var(--muted)">Status: </label>
+            <select class="status-toggle status-select" data-rid="${r.id}">
+              ${statusOptions(r.status)}
+            </select>
+          </div>
+          <div class="rechnung-actions">
+            <button class="btn btn-primary btn-detail-email" data-rid="${r.id}">✉️ Email</button>
+            <button class="btn btn-outline btn-detail-pdf" data-rid="${r.id}" ${!r.pdf?'disabled':''}>📄 PDF</button>
+            <button class="btn btn-outline btn-edit-rechnung" data-rid="${r.id}">Edit</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMonatsübersicht() {
+      const y = monatCursor.getFullYear();
+      const m = monatCursor.getMonth();
+      document.getElementById('monat-title').textContent = `${MONTH_NAMES[m]} ${y}`;
+
+      const inMonth = state.rechnungen.filter(r => {
+        const d = parseDate(r.faelligAm);
+        return d.getFullYear() === y && d.getMonth() === m;
+      });
+      const contractPlanned = getContractPlannedForMonth(y, m);
+
+      let invoicePlanned = 0, received = 0, outstanding = 0;
+      inMonth.forEach(r => {
+        const amt = r.betrag || 0;
+        invoicePlanned += amt;
+        if (r.status === 'bezahlt') received += amt;
+        else outstanding += amt;
+      });
+
+      const contractSum = contractPlanned.reduce((s, c) => s + c.amount, 0);
+      const contractLabel = contractPlanned.length
+        ? contractPlanned.map(c => formatMoney(c.amount, c.currency)).join(' + ')
+        : '—';
+
+      document.getElementById('monat-stats').innerHTML = `
+        <div class="stat-tile planned"><div class="label">Contract planned (auto)</div><div class="value" style="font-size:18px">${contractPlanned.length ? formatMoney(contractSum, contractPlanned[0].currency) : '—'}</div></div>
+        <div class="stat-tile planned"><div class="label">Invoices (due this month)</div><div class="value" style="font-size:18px">${inMonth.length ? formatEUR(invoicePlanned) : '—'}</div></div>
+        <div class="stat-tile green"><div class="label">Received</div><div class="value">${formatEUR(received)}</div></div>
+        <div class="stat-tile yellow"><div class="label">Outstanding (invoices)</div><div class="value">${formatEUR(outstanding)}</div></div>
+      `;
+
+      const list = document.getElementById('monat-list');
+      const rows = [];
+
+      contractPlanned.forEach(c => {
+        rows.push({
+          sort: 0,
+          html: `
+          <div class="monat-row contract-auto" data-kid="${c.kundeId}">
+            <span class="k-name">${esc(c.name)} <span class="badge" style="background:#EDE9FE;color:#4E4997">Contract</span></span>
+            <span class="r-nr">Monthly · auto</span>
+            <span class="betrag">${formatMoney(c.amount, c.currency)}</span>
+            <span class="hint" style="font-style:normal">Planned</span>
+          </div>`
+        });
+      });
+
+      [...inMonth].sort((a, b) => parseDate(a.faelligAm) - parseDate(b.faelligAm)).forEach(r => {
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : '—';
+        const billing = k ? `<span class="billing-badge ${k.billingType || 'one-time'}" style="font-size:10px">${getBillingLabel(k.billingType || 'one-time')}</span>` : '';
+        rows.push({
+          sort: 1,
+          html: `
+          <div class="monat-row">
+            <span class="k-name">${esc(name)} ${billing}</span>
+            <span class="r-nr">${esc(r.nummer)}</span>
+            <span class="betrag">${formatEUR(r.betrag)}</span>
+            <select class="status-select monat-status" data-rid="${r.id}">
+              ${statusOptions(r.status)}
+            </select>
+          </div>`
+        });
+      });
+
+      if (rows.length === 0) {
+        list.innerHTML = `<div class="empty-state">No planned revenue or invoices in ${MONTH_NAMES[m]}.</div>`;
+        return;
+      }
+
+      list.innerHTML = rows.map(r => r.html).join('');
+
+      list.querySelectorAll('.monat-row.contract-auto').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => openKundenDetail(row.dataset.kid));
+      });
+      list.querySelectorAll('.monat-status').forEach(sel => {
+        sel.onchange = () => {
+          const r = state.rechnungen.find(x => x.id === sel.dataset.rid);
+          if (r) {
+            r.status = sel.value;
+            saveToStorage();
+            renderMonatsübersicht();
+            renderKundenListe();
+            checkFaelligkeiten();
+          }
+        };
+      });
+    }
+
+    function sendEmail(rechnungId) {
+      const r = state.rechnungen.find(x => x.id === rechnungId);
+      if (!r) return;
+      const k = getKunde(r.kundeId);
+      if (!k) return;
+      if (!k.email) {
+        showToast('No email on file — add one by re-saving the client or contact them manually');
+        return;
+      }
+
+      const subject = encodeURIComponent(`Invoice ${r.nummer} – Kreatify`);
+      const body = encodeURIComponent(
+        `Hi,\n\nPlease find invoice ${r.nummer} for ${getKundenName(k)} with due date ${formatDate(r.faelligAm)} attached. Let me know if you have any questions.\n\nBest regards,\nKreatify`
+      );
+      window.location.href = `mailto:${k.email}?subject=${subject}&body=${body}`;
+
+      r.status = 'gesendet';
+      saveToStorage();
+      showToast('Please attach the PDF manually — use the download button');
+      renderKundenListe();
+      if (selectedKundeId) renderKundenDetail();
+      if (currentView === 'monat') renderMonatsübersicht();
+      checkFaelligkeiten();
+    }
+
+    function showPdf(rechnungId) {
+      const r = state.rechnungen.find(x => x.id === rechnungId);
+      if (!r || !r.pdf) return;
+      document.getElementById('pdf-title').textContent = r.nummer;
+      document.getElementById('pdf-frame').src = r.pdf;
+      document.getElementById('pdf-download').href = r.pdf;
+      document.getElementById('pdf-download').download = `${r.nummer}.pdf`;
+      openModal('modal-pdf');
+    }
+
+    function getPaymentFollowUps() {
+      const after = state.einstellungen.zahlungNachfassTage ?? 3;
+      return state.rechnungen.filter(r => {
+        if (r.status === 'bezahlt') return false;
+        if (daysUntil(r.faelligAm) > -after) return false;
+        const key = `payment_dismiss_${r.id}_${fmtDate(new Date())}`;
+        return !sessionStorage.getItem(key);
+      }).sort((a, b) => parseDate(a.faelligAm) - parseDate(b.faelligAm));
+    }
+
+    function showNextPaymentCheck() {
+      if (document.getElementById('modal-payment-check').classList.contains('open')) return;
+      if (document.getElementById('modal-ops-alert').classList.contains('open')) return;
+      paymentCheckQueue = getPaymentFollowUps();
+      if (paymentCheckQueue.length === 0) {
+        currentPaymentCheck = null;
+        return;
+      }
+      currentPaymentCheck = paymentCheckQueue[0];
+      const r = currentPaymentCheck;
+      const k = getKunde(r.kundeId);
+      const name = k ? getKundenName(k) : 'Client';
+      const daysPast = Math.abs(daysUntil(r.faelligAm));
+      document.getElementById('payment-check-text').textContent =
+        `The due date was ${daysPast} day${daysPast === 1 ? '' : 's'} ago. If payment was received, we'll mark it as paid and include it in Received.`;
+      document.getElementById('payment-check-meta').textContent =
+        `${name} · ${r.nummer} · ${formatEUR(r.betrag)} · due ${formatDate(r.faelligAm)}`;
+      openModal('modal-payment-check');
+    }
+
+    function dismissPaymentCheck(rid) {
+      sessionStorage.setItem(`payment_dismiss_${rid}_${fmtDate(new Date())}`, '1');
+    }
+
+    function markPaymentReceived(r) {
+      r.status = 'bezahlt';
+      saveToStorage();
+      showToast(`Marked ${r.nummer} as paid — added to Received`);
+      renderKundenListe();
+      if (selectedKundeId) renderKundenDetail();
+      if (currentView === 'monat') renderMonatsübersicht();
+      checkFaelligkeiten();
+    }
+
+    function checkFaelligkeiten() {
+      const invoiceDays = state.einstellungen.erinnerungTage ?? 3;
+      const banner = document.getElementById('warn-banner');
+      const alerts = [];
+
+      state.kunden.forEach(k => {
+        if (!isClientActive(k)) return;
+        const nextGrid = getNextGridDeadline(k);
+        if (nextGrid) {
+          const gd = daysUntil(nextGrid);
+          const name = getKundenName(k);
+          if (gd < 0) {
+            alerts.push({ priority: 0, text: `▦ Grid overdue for ${name} — was due ${formatDate(nextGrid)}`, action: () => setView('calendar') });
+          } else if (gd <= (state.einstellungen.gridReminder2 ?? 10)) {
+            alerts.push({ priority: 1, text: `▦ Grid for ${name} due ${gd === 0 ? 'today' : 'in ' + gd + ' days'} (${formatDate(nextGrid)})`, action: () => setView('calendar') });
+          }
+        }
+        if (needsShootingPlanReminder(k)) {
+          alerts.push({ priority: 2, text: `🎬 Plan next month's shooting for ${getKundenName(k)}`, action: () => openKundenDetail(k.id) });
+        }
+        if (!hasContract(k)) return;
+        const st = getContractStatus(k);
+        if (st.type === 'ended') {
+          alerts.push({ priority: 3, text: `📋 Contract for ${getKundenName(k)} ended ${formatDate(k.contractEnd)} — set up a new contract`, action: () => { setView('contracts'); } });
+        } else if (st.type === 'ending') {
+          alerts.push({ priority: 4, text: `📋 Contract for ${getKundenName(k)} ends ${formatDate(k.contractEnd)} — renew soon`, action: () => { setView('contracts'); } });
+        }
+      });
+
+      state.rechnungen.forEach(r => {
+        if (r.status === 'bezahlt') return;
+        const d = daysUntil(r.faelligAm);
+        if (d >= 0 && d <= invoiceDays) {
+          const k = getKunde(r.kundeId);
+          const name = k ? getKundenName(k) : 'Unknown';
+          let when = d === 0 ? 'due today' : d === 1 ? 'due tomorrow' : `due in ${d} days`;
+          alerts.push({ priority: 5, text: `⚠️ Invoice ${r.nummer} for ${name} is ${when}`, action: () => {
+            setView('kunden');
+            const el = document.querySelector(`[data-scroll-id="${r.kundeId}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }});
+        }
+      });
+
+      const payFollow = getPaymentFollowUps();
+      if (payFollow.length > 0) {
+        const r = payFollow[0];
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : 'Unknown';
+        alerts.push({ priority: 6, text: `💰 Did ${name} pay invoice ${r.nummer}? Tap to confirm`, action: () => showNextPaymentCheck() });
+      }
+
+      alerts.sort((a, b) => a.priority - b.priority);
+
+      if (alerts.length > 0) {
+        const a = alerts[0];
+        banner.textContent = a.text;
+        banner.classList.add('visible');
+        bannerAction = a.action;
+        banner.onclick = () => { if (bannerAction) bannerAction(); };
+      } else {
+        banner.classList.remove('visible');
+        bannerAction = null;
+      }
+    }
+
+    function isSlackConfigured() {
+      const e = state.einstellungen;
+      return e.slackEnabled !== false && !!(e.slackRelayUrl && e.slackRelayUrl.trim());
+    }
+
+    async function sendSlack(text, dedupeKey, skipDedupe) {
+      const url = (state.einstellungen.slackRelayUrl || '').trim();
+      if (!isSlackConfigured()) return false;
+      if (dedupeKey && !skipDedupe) {
+        const k = `slack_${dedupeKey}`;
+        if (sessionStorage.getItem(k)) return false;
+        sessionStorage.setItem(k, '1');
+      }
+      const payload = JSON.stringify({ text: `*Kreatify*\n${text}` });
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok !== false) return true;
+      } catch (err) {
+        /* CORS often blocks file:// → try no-cors (message may still be delivered) */
+      }
+      try {
+        await fetch(url, { method: 'POST', mode: 'no-cors', body: payload });
+        return true;
+      } catch (err2) {
+        console.warn('Slack relay error:', err2);
+        return false;
+      }
+    }
+
+    function sendSlackReminders() {
+      if (!isSlackConfigured()) return;
+      const todayKey = fmtDate(new Date());
+      const invoiceDays = state.einstellungen.erinnerungTage ?? 3;
+      const g1 = state.einstellungen.gridReminder1 ?? 15;
+      const g2 = state.einstellungen.gridReminder2 ?? 10;
+
+      state.rechnungen.forEach(r => {
+        if (r.status === 'bezahlt') return;
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : 'Client';
+        const d = daysUntil(r.faelligAm);
+        if (d === 0) {
+          sendSlack(`Invoice ${r.nummer} for ${name} is due today!`, `inv_${r.id}_${todayKey}`);
+        } else if (d >= 0 && d <= invoiceDays) {
+          const when = d === 1 ? 'due tomorrow' : `due in ${d} days`;
+          sendSlack(`Invoice ${r.nummer} for ${name} is ${when}.`, `inv_soon_${r.id}_${todayKey}`);
+        }
+      });
+
+      state.kunden.forEach(k => {
+        if (hasContract(k)) {
+          const st = getContractStatus(k);
+          if (st.type === 'ended') {
+            sendSlack(`Contract for ${getKundenName(k)} ended — set up a new contract.`, `contract_end_${k.id}_${todayKey}`);
+          } else if (st.type === 'ending') {
+            sendSlack(`Contract for ${getKundenName(k)} ends ${formatDate(k.contractEnd)} — renew soon.`, `contract_soon_${k.id}_${todayKey}`);
+          }
+        }
+        const next = getNextGridDeadline(k);
+        if (next) {
+          const days = daysUntil(next);
+          const name = getKundenName(k);
+          if (days < 0) {
+            sendSlack(`Monthly grid for ${name} is overdue (was due ${formatDate(next)}).`, `grid_over_${k.id}_${next}_${todayKey}`);
+          } else if (days === g1) {
+            sendSlack(`Attention: Monthly grid for ${name} must be delivered soon. Due ${formatDate(next)} (${g1} days).`, `grid_${g1}_${k.id}_${next}`);
+          } else if (days === g2) {
+            sendSlack(`Attention: Monthly grid for ${name} must be delivered soon. Due ${formatDate(next)} (${g2} days).`, `grid_${g2}_${k.id}_${next}`);
+          }
+        }
+        if (needsShootingPlanReminder(k)) {
+          sendSlack(`Reminder: Plan next month's shooting for ${getKundenName(k)}.`, `shootplan_${k.id}_${todayKey}`);
+        }
+      });
+
+      getPaymentFollowUps().slice(0, 3).forEach(r => {
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : 'Client';
+        sendSlack(`Did ${name} pay invoice ${r.nummer}? Open Kreatify to confirm.`, `pay_${r.id}_${todayKey}`);
+      });
+    }
+
+    function sendNotification() {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const todayKey = fmtDate(new Date());
+
+      state.rechnungen.filter(r => r.status !== 'bezahlt' && daysUntil(r.faelligAm) === 0).forEach(r => {
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : 'Client';
+        const key = `notified_inv_${r.id}_${todayKey}`;
+        if (sessionStorage.getItem(key)) return;
+        new Notification('Kreatify', { body: `Invoice ${r.nummer} for ${name} is due today!` });
+        sessionStorage.setItem(key, '1');
+      });
+
+      state.kunden.forEach(k => {
+        if (!hasContract(k)) return;
+        const st = getContractStatus(k);
+        if (st.type !== 'ended' && st.type !== 'ending') return;
+        const key = `notified_contract_${k.id}_${todayKey}`;
+        if (sessionStorage.getItem(key)) return;
+        const msg = st.type === 'ended'
+          ? `Contract for ${getKundenName(k)} ended — set up a new contract`
+          : `Contract for ${getKundenName(k)} ends ${formatDate(k.contractEnd)} — renew soon`;
+        new Notification('Kreatify — Contract', { body: msg });
+        sessionStorage.setItem(key, '1');
+      });
+
+      getPaymentFollowUps().slice(0, 1).forEach(r => {
+        const k = getKunde(r.kundeId);
+        const name = k ? getKundenName(k) : 'Client';
+        const key = `notified_pay_${r.id}_${todayKey}`;
+        if (sessionStorage.getItem(key)) return;
+        new Notification('Kreatify — Payment', { body: `Did ${name} pay invoice ${r.nummer}? Open the app to confirm.` });
+        sessionStorage.setItem(key, '1');
+      });
+
+      const g1 = state.einstellungen.gridReminder1 ?? 15;
+      const g2 = state.einstellungen.gridReminder2 ?? 10;
+      state.kunden.forEach(k => {
+        const next = getNextGridDeadline(k);
+        if (!next) return;
+        const days = daysUntil(next);
+        const name = getKundenName(k);
+        if (days === g1 || days === g2) {
+          const key = `notified_grid_${k.id}_${next}_${days}`;
+          if (sessionStorage.getItem(key)) return;
+          new Notification('Kreatify — Content grid', {
+            body: `Attention: Monthly grid for ${name} must be delivered soon. Due ${formatDate(next)}.`
+          });
+          sessionStorage.setItem(key, '1');
+        }
+        if (needsShootingPlanReminder(k)) {
+          const key = `notified_shootplan_${k.id}_${todayKey}`;
+          if (sessionStorage.getItem(key)) return;
+          new Notification('Kreatify — Shooting', { body: `Reminder: Plan next month's shooting for ${name}.` });
+          sessionStorage.setItem(key, '1');
+        }
+      });
+    }
+
+    function deleteKunde(kundeId) {
+      const k = getKunde(kundeId);
+      if (!k) return;
+      const name = getKundenName(k);
+      const invCount = state.rechnungen.filter(r => r.kundeId === kundeId).length;
+      const shootCount = state.shootings.filter(s => s.kundeId === kundeId).length;
+      let msg = `Delete ${name} permanently?`;
+      if (invCount || shootCount) {
+        msg += ` This also removes ${invCount} invoice(s) and ${shootCount} shooting(s).`;
+      }
+      if (!confirm(msg)) return;
+      state.kunden = state.kunden.filter(x => x.id !== kundeId);
+      state.rechnungen = state.rechnungen.filter(r => r.kundeId !== kundeId);
+      state.shootings = state.shootings.filter(s => s.kundeId !== kundeId);
+      saveToStorage();
+      if (selectedKundeId === kundeId) closeKundenDetail();
+      closeModal('modal-kunde');
+      renderKundenListe();
+      renderContracts();
+      if (currentView === 'monat') renderMonatsübersicht();
+      if (currentView === 'calendar') renderCalendar();
+      checkFaelligkeiten();
+      showToast(`${name} deleted`);
+    }
+
+    function openKundeModal(k = null) {
+      document.getElementById('modal-kunde-title').textContent = k ? 'Edit client' : 'New client';
+      document.getElementById('kunde-delete').style.display = k ? 'inline-block' : 'none';
+      document.getElementById('kunde-id').value = k ? k.id : '';
+      document.getElementById('k-firma').value = k ? (k.firmenname || getKundenName(k)) : '';
+      document.getElementById('k-billing').value = k ? (k.billingType || 'one-time') : 'one-time';
+      document.getElementById('k-client-status').value = k ? (k.clientStatus || 'active') : 'active';
+      document.getElementById('k-notiz').value = k ? (k.notiz || '') : '';
+      openModal('modal-kunde');
+    }
+
+    function openRechnungModal(kundeId, rechnungId = null) {
+      const r = rechnungId ? state.rechnungen.find(x => x.id === rechnungId) : null;
+      document.querySelector('#modal-rechnung h2').textContent = r ? 'Edit invoice' : 'New invoice';
+      document.getElementById('r-kunde-id').value = kundeId;
+      document.getElementById('r-id').value = r ? r.id : '';
+      document.getElementById('r-nummer').value = r ? r.nummer : '';
+      document.getElementById('r-faellig').value = r ? r.faelligAm : '';
+      document.getElementById('r-betrag').value = r && r.betrag != null ? r.betrag : '';
+      document.getElementById('r-status').value = r ? r.status : 'offen';
+      document.getElementById('r-notiz').value = r ? (r.notiz || '') : '';
+      document.getElementById('r-pdf').value = '';
+      openModal('modal-rechnung');
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.querySelectorAll('.sidebar-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', () => setView(btn.dataset.view));
+    });
+
+    document.getElementById('btn-neuer-kunde').addEventListener('click', () => openKundeModal());
+    document.getElementById('btn-einstellungen').addEventListener('click', () => {
+      const e = state.einstellungen;
+      document.getElementById('e-erinnerung').value = String(e.erinnerungTage || 3);
+      document.getElementById('e-vertrag').value = String(e.vertragErinnerungTage || 14);
+      document.getElementById('e-zahlung').value = String(e.zahlungNachfassTage || 3);
+      document.getElementById('e-grid1').value = String(e.gridReminder1 || 15);
+      document.getElementById('e-grid2').value = String(e.gridReminder2 || 10);
+      document.getElementById('e-shoot-plan').value = String(e.shootingPlanDaysBeforeMonth || 10);
+      document.getElementById('e-slack-enabled').checked = e.slackEnabled !== false;
+      document.getElementById('e-slack-relay').value = e.slackRelayUrl || '';
+      openModal('modal-einstellungen');
+    });
+
+    document.getElementById('slack-test').addEventListener('click', async () => {
+      const url = document.getElementById('e-slack-relay').value.trim();
+      if (!url) {
+        showToast('Please enter the relay URL first');
+        return;
+      }
+      const prev = state.einstellungen.slackRelayUrl;
+      state.einstellungen.slackRelayUrl = url;
+      state.einstellungen.slackEnabled = document.getElementById('e-slack-enabled').checked;
+      const ok = await sendSlack('Test message from Kreatify — Slack is connected.', null, true);
+      state.einstellungen.slackRelayUrl = prev;
+      showToast(ok ? 'Test message sent — check your Slack channel' : 'Failed — check relay URL and Apps Script deployment');
+    });
+
+    document.getElementById('modal-shooting-cancel').addEventListener('click', () => closeModal('modal-shooting'));
+    document.getElementById('shooting-delete').addEventListener('click', () => {
+      const sid = document.getElementById('s-id').value;
+      if (!sid || !confirm('Delete this shooting?')) return;
+      state.shootings = state.shootings.filter(s => s.id !== sid);
+      saveToStorage();
+      closeModal('modal-shooting');
+      if (selectedKundeId) renderKundenDetail();
+      if (currentView === 'calendar') renderCalendar();
+      checkFaelligkeiten();
+      showToast('Shooting deleted');
+    });
+    document.getElementById('form-shooting').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const sid = document.getElementById('s-id').value;
+      const payload = {
+        kundeId: document.getElementById('s-kunde-id').value,
+        scheduledAt: document.getElementById('s-datetime').value,
+        location: document.getElementById('s-location').value.trim(),
+        team: getSelectedTeam('s-team-boxes'),
+        status: document.getElementById('s-status').value,
+        notes: document.getElementById('s-notes').value.trim()
+      };
+      if (sid) {
+        const s = state.shootings.find(x => x.id === sid);
+        Object.assign(s, payload);
+      } else {
+        state.shootings.push({ id: uid(), ...payload });
+      }
+      saveToStorage();
+      closeModal('modal-shooting');
+      if (selectedKundeId) renderKundenDetail();
+      if (currentView === 'calendar') renderCalendar();
+      checkFaelligkeiten();
+      showToast('Shooting saved');
+    });
+
+    document.getElementById('ops-alert-dismiss').addEventListener('click', () => {
+      dismissOpsAlert();
+      closeModal('modal-ops-alert');
+      currentOpsAlert = null;
+      setTimeout(showNextOpsAlert, 300);
+      checkFaelligkeiten();
+    });
+    document.getElementById('ops-alert-ok').addEventListener('click', () => {
+      if (currentOpsAlert && currentOpsAlert.action) currentOpsAlert.action();
+      dismissOpsAlert();
+      closeModal('modal-ops-alert');
+      currentOpsAlert = null;
+      setTimeout(showNextOpsAlert, 300);
+      checkFaelligkeiten();
+    });
+
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      calCursor.setMonth(calCursor.getMonth() - 1);
+      renderCalendar();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+      calCursor.setMonth(calCursor.getMonth() + 1);
+      renderCalendar();
+    });
+
+    document.getElementById('modal-contract-cancel').addEventListener('click', () => closeModal('modal-contract'));
+    document.getElementById('form-contract').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const k = getKunde(document.getElementById('c-kunde-id').value);
+      if (!k) return;
+      const start = document.getElementById('c-start').value;
+      const end = document.getElementById('c-end').value;
+      if (start && end && parseDate(start) > parseDate(end)) {
+        showToast('Contract end must be after start');
+        return;
+      }
+      k.contractStart = start || null;
+      k.contractEnd = end || null;
+      const payDayVal = document.getElementById('c-payment-day').value;
+      if (payDayVal !== '') {
+        const pd = parseInt(payDayVal, 10);
+        if (pd < 1 || pd > 31) {
+          showToast('Payment day must be between 1 and 31');
+          return;
+        }
+        k.paymentDayOfMonth = pd;
+      } else {
+        k.paymentDayOfMonth = null;
+      }
+      const monthlyVal = document.getElementById('c-monthly').value;
+      k.monthlyPayment = monthlyVal ? parseFloat(monthlyVal) : null;
+      k.monthlyCurrency = 'MXN';
+      const postsVal = document.getElementById('c-posts').value;
+      const storiesVal = document.getElementById('c-stories').value;
+      k.postsPerWeek = postsVal !== '' ? parseInt(postsVal, 10) : null;
+      k.storiesPerWeek = storiesVal !== '' ? parseInt(storiesVal, 10) : null;
+      saveToStorage();
+      closeModal('modal-contract');
+      renderContracts();
+      if (currentView === 'monat') renderMonatsübersicht();
+      if (currentView === 'calendar') renderCalendar();
+      if (selectedKundeId === k.id) renderKundenDetail();
+      checkFaelligkeiten();
+      showToast('Contract saved');
+    });
+
+    document.getElementById('client-filter-bar').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      clientFilter = btn.dataset.filter;
+      document.querySelectorAll('#client-filter-bar [data-filter]').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === clientFilter);
+      });
+      renderKundenListe();
+    });
+
+    document.getElementById('payment-check-yes').addEventListener('click', () => {
+      if (currentPaymentCheck) markPaymentReceived(currentPaymentCheck);
+      closeModal('modal-payment-check');
+      currentPaymentCheck = null;
+      setTimeout(showNextPaymentCheck, 300);
+    });
+    document.getElementById('payment-check-no').addEventListener('click', () => {
+      if (currentPaymentCheck) dismissPaymentCheck(currentPaymentCheck.id);
+      closeModal('modal-payment-check');
+      currentPaymentCheck = null;
+      checkFaelligkeiten();
+      setTimeout(showNextPaymentCheck, 300);
+    });
+
+    document.getElementById('panel-overlay').addEventListener('click', closeKundenDetail);
+
+    document.getElementById('modal-kunde-cancel').addEventListener('click', () => closeModal('modal-kunde'));
+    document.getElementById('kunde-delete').addEventListener('click', () => {
+      const id = document.getElementById('kunde-id').value;
+      if (id) deleteKunde(id);
+    });
+    document.getElementById('modal-rechnung-cancel').addEventListener('click', () => closeModal('modal-rechnung'));
+    document.getElementById('pdf-close').addEventListener('click', () => {
+      document.getElementById('pdf-frame').src = '';
+      closeModal('modal-pdf');
+    });
+
+    document.getElementById('form-kunde').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('kunde-id').value;
+      const data = {
+        firmenname: document.getElementById('k-firma').value.trim(),
+        billingType: document.getElementById('k-billing').value,
+        clientStatus: document.getElementById('k-client-status').value,
+        notiz: document.getElementById('k-notiz').value.trim()
+      };
+      if (id) {
+        const k = getKunde(id);
+        Object.assign(k, data);
+        delete k.vorname;
+        delete k.nachname;
+      } else {
+        state.kunden.push({ id: uid(), contractStart: null, contractEnd: null, email: '', ...data });
+      }
+      migrateState();
+      saveToStorage();
+      closeModal('modal-kunde');
+      renderKundenListe();
+      if (currentView === 'monat') renderMonatsübersicht();
+      if (selectedKundeId) renderKundenDetail();
+      checkFaelligkeiten();
+    });
+
+    document.getElementById('form-rechnung').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const kundeId = document.getElementById('r-kunde-id').value;
+      const rid = document.getElementById('r-id').value;
+      const betragVal = document.getElementById('r-betrag').value;
+      const fileInput = document.getElementById('r-pdf');
+      let pdfData = null;
+
+      if (rid) {
+        const existing = state.rechnungen.find(x => x.id === rid);
+        pdfData = existing ? existing.pdf : null;
+      }
+      if (fileInput.files[0]) {
+        pdfData = await readFileAsBase64(fileInput.files[0]);
+      }
+
+      const payload = {
+        kundeId,
+        nummer: document.getElementById('r-nummer').value.trim(),
+        faelligAm: document.getElementById('r-faellig').value,
+        betrag: betragVal ? parseFloat(betragVal) : null,
+        status: document.getElementById('r-status').value,
+        pdf: pdfData,
+        notiz: document.getElementById('r-notiz').value.trim()
+      };
+
+      if (rid) {
+        const r = state.rechnungen.find(x => x.id === rid);
+        Object.assign(r, payload);
+      } else {
+        state.rechnungen.push({ id: uid(), ...payload });
+      }
+      saveToStorage();
+      closeModal('modal-rechnung');
+      renderKundenListe();
+      if (selectedKundeId) renderKundenDetail();
+      if (currentView === 'monat') renderMonatsübersicht();
+      checkFaelligkeiten();
+    });
+
+    document.getElementById('einstellungen-save').addEventListener('click', () => {
+      state.einstellungen.erinnerungTage = parseInt(document.getElementById('e-erinnerung').value, 10);
+      state.einstellungen.vertragErinnerungTage = parseInt(document.getElementById('e-vertrag').value, 10);
+      state.einstellungen.zahlungNachfassTage = parseInt(document.getElementById('e-zahlung').value, 10);
+      state.einstellungen.gridReminder1 = parseInt(document.getElementById('e-grid1').value, 10);
+      state.einstellungen.gridReminder2 = parseInt(document.getElementById('e-grid2').value, 10);
+      state.einstellungen.shootingPlanDaysBeforeMonth = parseInt(document.getElementById('e-shoot-plan').value, 10);
+      state.einstellungen.slackEnabled = document.getElementById('e-slack-enabled').checked;
+      state.einstellungen.slackRelayUrl = document.getElementById('e-slack-relay').value.trim();
+      saveToStorage();
+      closeModal('modal-einstellungen');
+      checkFaelligkeiten();
+      showToast(state.einstellungen.slackRelayUrl ? 'Settings saved — Slack enabled' : 'Settings saved');
+    });
+
+    document.getElementById('einstellungen-export').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kreatify-export-' + fmtDate(new Date()) + '.json';
+      a.click();
+      showToast('JSON exported — import in TEAM-kreatify.html');
+    });
+
+    document.getElementById('monat-prev').addEventListener('click', () => {
+      monatCursor.setMonth(monatCursor.getMonth() - 1);
+      renderMonatsübersicht();
+    });
+    document.getElementById('monat-next').addEventListener('click', () => {
+      monatCursor.setMonth(monatCursor.getMonth() + 1);
+      renderMonatsübersicht();
+    });
+
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    /* --- Simple password gate --- */
+    /* Akzeptiert mit und ohne Punkt am Ende (früher nur mit Punkt). */
+    const KREATIFY_PASSWORDS = ['HeavenNova3004', 'HeavenNova3004.'];
+
+    function setupAuthGate() {
+      const saved = sessionStorage.getItem('kreatify_auth');
+      const form = document.getElementById('login-form');
+      const input = document.getElementById('login-password');
+      const errorEl = document.getElementById('login-error');
+
+      if (!form || !input) return;
+
+      if (saved === 'ok') {
+        document.body.classList.add('authenticated');
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const val = input.value.trim();
+        if (KREATIFY_PASSWORDS.includes(val)) {
+          document.body.classList.add('authenticated');
+          sessionStorage.setItem('kreatify_auth', 'ok');
+          errorEl.textContent = '';
+          form.reset();
+        } else {
+          errorEl.textContent = 'Falsches Passwort. Bitte erneut versuchen.';
+          input.value = '';
+          input.focus();
+        }
+      });
+    }
+
+    setupAuthGate();
+
+    loadFromStorage();
+    requestNotificationPermission();
+    renderKundenListe();
+    checkFaelligkeiten();
+    setTimeout(() => {
+      showNextOpsAlert();
+      setTimeout(showNextPaymentCheck, 400);
+    }, 800);
+    setInterval(() => {
+      checkFaelligkeiten();
+      sendNotification();
+      sendSlackReminders();
+      showNextOpsAlert();
+      showNextPaymentCheck();
+    }, 60000);
+
+    setTimeout(sendSlackReminders, 2000);
+  </script>
+</body>
+</html>
